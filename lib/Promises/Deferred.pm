@@ -19,15 +19,12 @@ class Deferred {
     
     has $resolved = [];
     has $rejected = [];
-    has $status   = IN_PROGRESS;
-    has $promise;
-    has $result;
+
+    has $status   is ro = IN_PROGRESS;
+    has $promise  is ro;
+    has $result   is ro;
 
     submethod BUILD { $promise = Promises::Promise->new($self) }
-
-    method status { $status } 
-    method promise { $promise } 
-    method result { $result } 
 
     # predicates for all the status possiblities
     method is_in_progress { $status eq IN_PROGRESS }
