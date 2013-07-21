@@ -23,19 +23,19 @@ $p0->then(
 
 diag "Delaying for 1 second ...";
 
-is( $p0->status, Promises::Deferred->IN_PROGRESS, '... got the right status' );
+is( $p0->status, Promises::IN_PROGRESS, '... got the right status' );
 
 is_deeply(
     [ $cv->recv ],
     [
         'ZERO',
         'resolved after 1',
-        Promises::Deferred->RESOLVING,
+        Promises::RESOLVING,
         [ 'resolved after 1' ]
     ],
     '... got the expected values back'
 );
 
-is( $p0->status, Promises::Deferred->RESOLVED, '... got the right status' );
+is( $p0->status, Promises::RESOLVED, '... got the right status' );
 
 done_testing;

@@ -1,122 +1,114 @@
-package Promises::Deferred;
-# ABSTRACT: An implementation of Promises in Perl
-
-use strict;
+package Promises;
+use 5.16.1;
 use warnings;
+use mop;
 
-use Scalar::Util qw[ blessed reftype ];
-use Carp         qw[ confess ];
-
-use Promises::Promise;
-
+# ABSTRACT: An implementation of Promises in Perl
 use constant IN_PROGRESS => 'in progress';
 use constant RESOLVED    => 'resolved';
 use constant REJECTED    => 'rejected';
 use constant RESOLVING   => 'resolving';
 use constant REJECTING   => 'rejecting';
 
-sub new {
-    my $class = shift;
-    my $self  = bless {
-        resolved => [],
-        rejected => [],
-        status   => IN_PROGRESS,
-        promise  => undef
-    } => $class;
-    $self->{'promise'} = Promises::Promise->new( $self );
-    $self;
-}
+use Scalar::Util qw[ blessed reftype ];
+use Carp         qw[ confess ];
 
-sub promise { (shift)->{'promise'} }
-sub status  { (shift)->{'status'}  }
-sub result  { (shift)->{'result'}  }
+use Promises::Promise;
 
-# predicates for all the status possiblities
-sub is_in_progress { (shift)->{'status'} eq IN_PROGRESS }
-sub is_resolving   { (shift)->{'status'} eq RESOLVING   }
-sub is_rejecting   { (shift)->{'status'} eq REJECTING   }
-sub is_resolved    { (shift)->{'status'} eq RESOLVED    }
-sub is_rejected    { (shift)->{'status'} eq REJECTED    }
+class Deferred { 
+    
+    has $resolved = [];
+    has $rejected = [];
+    has $status   = IN_PROGRESS;
+    has $promise;
+    has $result;
 
-# the three possible states according to the spec ...
-sub is_unfulfilled { (shift)->is_in_progress            }
-sub is_fulfilled   { $_[0]->is_resolved || $_[0]->is_resolving }
-sub is_failed      { $_[0]->is_rejected || $_[0]->is_rejecting }
+    submethod BUILD { $promise = Promises::Promise->new($self) }
 
-sub resolve {
-    my $self   = shift;
-    my $result = [ @_ ];
-    $self->{'result'} = $result;
-    $self->{'status'} = RESOLVING;
-    $self->_notify( $self->{'resolved'}, $result );
-    $self->{'resolved'} = [];
-    $self->{'status'}   = RESOLVED;
-    $self;
-}
+    method status { $status } 
+    method promise { $promise } 
+    method result { $result } 
 
-sub reject {
-    my $self = shift;
-    my $result = [ @_ ];
-    $self->{'result'} = $result;
-    $self->{'status'} = REJECTING;
-    $self->_notify( $self->{'rejected'}, $result );
-    $self->{'rejected'} = [];
-    $self->{'status'}   = REJECTED;
-    $self;
-}
+    # predicates for all the status possiblities
+    method is_in_progress { $status eq IN_PROGRESS }
+    method is_resolving   { $status eq RESOLVING   }
+    method is_rejecting   { $status eq REJECTING   }
+    method is_resolved    { $status eq RESOLVED    }
+    method is_rejected    { $status eq REJECTED    }
 
-sub then {
-    my ($self, $callback, $error) = @_;
+    # the three possible states according to the spec ...
+    method is_unfulfilled { $self->is_in_progress            }
+    method is_fulfilled   { $self->is_resolved || $self->is_resolving }
+    method is_failed      { $self->is_rejected || $self->is_rejecting }
 
-    (ref $callback && reftype $callback eq 'CODE')
-        || confess "You must pass in a success callback";
-
-    (ref $error && reftype $error eq 'CODE')
-        || confess "You must pass in a error callback"
-            if $error;
-
-    # if we don't get an error
-    # handler, we need to chain
-    # it automatically
-    $error ||= sub { @_ };
-
-    my $d = (ref $self)->new;
-
-    push @{ $self->{'resolved'} } => $self->_wrap( $d, $callback, 'resolve' );
-    push @{ $self->{'rejected'} } => $self->_wrap( $d, $error,    'reject'  );
-
-    if ( $self->status eq RESOLVED ) {
-        $self->resolve( @{ $self->result } );
+    method resolve {
+        $result = [ @_ ];
+        $status = RESOLVING;
+        $self->_notify( $resolved, $result );
+        $resolved = [];
+        $status   = RESOLVED;
+        $self;
     }
 
-    if ( $self->status eq REJECTED ) {
-        $self->reject( @{ $self->result } );
+    method reject {
+        $result = [ @_ ];
+        $status = REJECTING;
+        $self->_notify( $rejected, $result );
+        $rejected = [];
+        $status   = REJECTED;
+        $self;
     }
 
-    $d->promise;
-}
+    method then($callback, $error) {
+        
+        (ref $callback && reftype $callback eq 'CODE')
+            || confess "You must pass in a success callback";
 
-sub _wrap {
-    my ($self, $d, $f, $method) = @_;
-    return sub {
-        my @results = $f->( @_ );
-        if ( (scalar @results) == 1 && blessed $results[0] && $results[0]->isa('Promises::Promise') ) {
-            $results[0]->then(
-                sub { $d->resolve( @{ $results[0]->result } ) },
-                sub { $d->reject( @{ $results[0]->result } )  },
-            );
+        (ref $error && reftype $error eq 'CODE')
+            || confess "You must pass in a error callback"
+                if $error;
+
+        # if we don't get an error
+        # handler, we need to chain
+        # it automatically
+        $error ||= sub { @_ };
+
+        my $d = (ref $self)->new;
+
+        push @$resolved => $self->_wrap( $d, $callback, 'resolve' );
+        push @$rejected => $self->_wrap( $d, $error,    'reject'  );
+
+        if ( $self->status eq RESOLVED ) {
+            $self->resolve( @{ $self->result } );
         }
-        else {
-            $d->$method( @results )
+
+        if ( $self->status eq REJECTED ) {
+            $self->reject( @{ $self->result } );
+        }
+
+        $d->promise;
+    }
+
+    method _wrap($d, $f, $method) {
+
+        return sub {
+            my @results = $f->( @_ );
+            if ( (scalar @results) == 1 && blessed $results[0] && $results[0]->isa('Promises::Promise') ) {
+                $results[0]->then(
+                    sub { $d->resolve( @{ $results[0]->result } ) },
+                    sub { $d->reject( @{ $results[0]->result } )  },
+                );
+            }
+            else {
+                $d->$method( @results )
+            }
         }
     }
-}
 
-sub _notify {
-    my ($self, $callbacks, $result) = @_;
-    $_->( @$result ) foreach @$callbacks;
+    method _notify($callbacks, $result) {
+        $_->( @$result ) foreach @$callbacks;
+    }
 }
-
 1;
 
 __END__

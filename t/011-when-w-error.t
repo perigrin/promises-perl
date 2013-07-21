@@ -25,8 +25,8 @@ when( $p0, $p1 )->then(
 
 diag "Delaying for 2 seconds ...";
 
-is( $p0->status, Promises::Deferred->IN_PROGRESS, '... got the right status in promise 0' );
-is( $p1->status, Promises::Deferred->IN_PROGRESS, '... got the right status in promise 1' );
+is( $p0->status, Promises::IN_PROGRESS, '... got the right status in promise 0' );
+is( $p1->status, Promises::IN_PROGRESS, '... got the right status in promise 1' );
 
 is_deeply(
     [ $cv->recv ],
@@ -34,7 +34,7 @@ is_deeply(
     '... got the expected values back'
 );
 
-is( $p0->status, Promises::Deferred->REJECTED, '... got the right status in promise 0' );
-is( $p1->status, Promises::Deferred->IN_PROGRESS, '... got the right status in promise 1' );
+is( $p0->status, Promises::REJECTED, '... got the right status in promise 0' );
+is( $p1->status, Promises::IN_PROGRESS, '... got the right status in promise 1' );
 
 done_testing;

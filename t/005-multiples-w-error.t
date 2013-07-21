@@ -31,15 +31,15 @@ $p0->then(
 
 diag "Delaying for 1 second ...";
 
-is( $p0->status, Promises::Deferred->IN_PROGRESS, '... got the right status in promise 0' );
-is( $p1->status, Promises::Deferred->IN_PROGRESS, '... got the right status in promise 1' );
+is( $p0->status, Promises::IN_PROGRESS, '... got the right status in promise 0' );
+is( $p1->status, Promises::IN_PROGRESS, '... got the right status in promise 1' );
 
 is_deeply(
     [ $cv0->recv ],
     [
         'ERROR',
         'rejected after 1',
-        Promises::Deferred->REJECTING,
+        Promises::REJECTING,
         [ 'rejected after 1' ]
     ],
     '... got the expected values back'
@@ -52,13 +52,13 @@ is_deeply(
     [
         'ONE',
         'resolved after 2',
-        Promises::Deferred->RESOLVING,
+        Promises::RESOLVING,
         [ 'resolved after 2' ]
     ],
     '... got the expected values back'
 );
 
-is( $p0->status, Promises::Deferred->REJECTED, '... got the right status in promise 0' );
-is( $p1->status, Promises::Deferred->RESOLVED, '... got the right status in promise 1' );
+is( $p0->status, Promises::REJECTED, '... got the right status in promise 0' );
+is( $p1->status, Promises::RESOLVED, '... got the right status in promise 1' );
 
 done_testing;

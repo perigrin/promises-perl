@@ -1,33 +1,37 @@
-package Promises::Promise;
+package Promises;
+use 5.16.1;
+
 # ABSTRACT: An implementation of Promises in Perl
 
-use strict;
 use warnings;
+use mop;
 
 use Scalar::Util qw[ blessed ];
 use Carp         qw[ confess ];
 
-sub new {
-    my ($class, $deferred) = @_;
-    (blessed $deferred && $deferred->isa('Promises::Deferred'))
-        || confess "You must supply an instance of Promises::Deferred";
-    bless { 'deferred' => $deferred } => $class;
+class Promise { 
+
+    has $deferred;# is required;
+
+    method new($x) { $class->next::method( deferred => $x ); }
+
+    submethod BUILD { die "You must supply an instance of Promises::Deferred" unless defined $deferred; }
+
+    method then    { $deferred->then( @_ ) }
+    method status  { $deferred->status     }
+    method result  { $deferred->result     }
+
+    method is_unfulfilled { $deferred->is_unfulfilled }
+    method is_fulfilled   { $deferred->is_fulfilled   }
+    method is_failed      { $deferred->is_failed      }
+
+    method is_in_progress { $deferred->is_in_progress }
+    method is_resolving   { $deferred->is_resolving   }
+    method is_rejecting   { $deferred->is_rejecting   }
+    method is_resolved    { $deferred->is_resolved    }
+    method is_rejected    { $deferred->is_rejected    }
+
 }
-
-sub then    { (shift)->{'deferred'}->then( @_ ) }
-sub status  { (shift)->{'deferred'}->status     }
-sub result  { (shift)->{'deferred'}->result     }
-
-sub is_unfulfilled { (shift)->{'deferred'}->is_unfulfilled }
-sub is_fulfilled   { (shift)->{'deferred'}->is_fulfilled   }
-sub is_failed      { (shift)->{'deferred'}->is_failed      }
-
-sub is_in_progress { (shift)->{'deferred'}->is_in_progress }
-sub is_resolving   { (shift)->{'deferred'}->is_resolving   }
-sub is_rejecting   { (shift)->{'deferred'}->is_rejecting   }
-sub is_resolved    { (shift)->{'deferred'}->is_resolved    }
-sub is_rejected    { (shift)->{'deferred'}->is_rejected    }
-
 1;
 
 __END__

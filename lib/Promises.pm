@@ -25,7 +25,7 @@ sub when {
             sub {
                 $results->[$i] = [ @_ ];
                 $remaining--;
-                if ( $remaining == 0 && $all_done->status ne $all_done->REJECTED ) {
+                if ( $remaining == 0 && $all_done->status ne Promises::REJECTED ) {
                     $all_done->resolve( @$results );
                 }
             },
