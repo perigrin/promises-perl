@@ -92,8 +92,8 @@ result in asynchronous programs.
 This module is actually Event Loop agnostic, the SYNOPSIS above
 uses L<AnyEvent::HTTP>, but that is just an example, it can work
 with any of the existing event loops out on CPAN. Over the next
-few releases I will try to add in documentation illustrating each 
-of the different event loops and how best to use Promises with 
+few releases I will try to add in documentation illustrating each
+of the different event loops and how best to use Promises with
 them.
 
 =head2 Relation to the Promise/A spec
@@ -116,43 +116,43 @@ we very much want to avoid.
 =head2 Relation to Promises/Futures in Scala
 
 Scala has a notion of Promises and an associated idea of Futures
-as well. The differences and similarities between this module 
-and the Promises found in Scalar are highlighted in depth in a 
+as well. The differences and similarities between this module
+and the Promises found in Scalar are highlighted in depth in a
 cookbook entry below.
 
 =head2 Cookbook
 
-I have begun moving the docs over into a Cookbook. While this 
-module is incredibly simple, the usage of it is quite complex 
+I have begun moving the docs over into a Cookbook. While this
+module is incredibly simple, the usage of it is quite complex
 and deserves to be explained in detail. It is my plan to grow
-this section to provide examples of the use of Promises in 
-a number of situations and with a number of different event 
+this section to provide examples of the use of Promises in
+a number of situations and with a number of different event
 loops.
 
 =over 1
 
 =item L<Promises::Cookbook::SynopsisBreakdown>
 
-This breaks down the example in the SYNOPSIS and walks through 
+This breaks down the example in the SYNOPSIS and walks through
 much of the details of Promises and how they work.
 
 =item L<Promises::Cookbook::TIMTOWTDI>
 
-Promise are just one of many ways to do async programming, this 
+Promise are just one of many ways to do async programming, this
 entry takes the Promises SYNOPSIS again and illustrates some
 counter examples with various modules.
 
 =item L<Promises::Cookbook::ChainingAndPipelining>
 
-One of the key benefits of Promises is that it retains much of 
-the flow of a syncronous program, this entry illustrates that 
+One of the key benefits of Promises is that it retains much of
+the flow of a syncronous program, this entry illustrates that
 and compares it with a syncronous (or blocking) version.
 
 =item L<Promises::Cookbook::ScalaFuturesComparison>
 
-This entry takes some examples of Futures in the Scala language 
-and translates them into Promises. This entry also showcases 
-using Promises with L<Mojo::UserAgent>. 
+This entry takes some examples of Futures in the Scala language
+and translates them into Promises. This entry also showcases
+using Promises with L<Mojo::UserAgent>.
 
 =back
 
