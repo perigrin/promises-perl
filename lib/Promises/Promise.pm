@@ -9,27 +9,25 @@ use mop;
 use Scalar::Util qw[ blessed ];
 use Carp         qw[ confess ];
 
-class Promise { 
+class Promise {
 
-    has $deferred;# is required;
+    has $!deferred = die "You must supply an instance of Promises::Deferred";
 
     method new($class: $x) { $class->next::method( deferred => $x ); }
 
-    submethod BUILD { die "You must supply an instance of Promises::Deferred" unless defined $deferred; }
+    method then    { $!deferred->then( @_ ) }
+    method status  { $!deferred->status     }
+    method result  { $!deferred->result     }
 
-    method then    { $deferred->then( @_ ) }
-    method status  { $deferred->status     }
-    method result  { $deferred->result     }
+    method is_unfulfilled { $!deferred->is_unfulfilled }
+    method is_fulfilled   { $!deferred->is_fulfilled   }
+    method is_failed      { $!deferred->is_failed      }
 
-    method is_unfulfilled { $deferred->is_unfulfilled }
-    method is_fulfilled   { $deferred->is_fulfilled   }
-    method is_failed      { $deferred->is_failed      }
-
-    method is_in_progress { $deferred->is_in_progress }
-    method is_resolving   { $deferred->is_resolving   }
-    method is_rejecting   { $deferred->is_rejecting   }
-    method is_resolved    { $deferred->is_resolved    }
-    method is_rejected    { $deferred->is_rejected    }
+    method is_in_progress { $!deferred->is_in_progress }
+    method is_resolving   { $!deferred->is_resolving   }
+    method is_rejecting   { $!deferred->is_rejecting   }
+    method is_resolved    { $!deferred->is_resolved    }
+    method is_rejected    { $!deferred->is_rejected    }
 
 }
 1;

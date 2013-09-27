@@ -15,23 +15,23 @@ use Carp         qw[ confess ];
 
 use Promises::Promise;
 
-class Deferred { 
-    
-    has $resolved = [];
-    has $rejected = [];
+class Deferred {
 
-    has $status   is ro = IN_PROGRESS;
-    has $promise  is ro;
-    has $result   is ro;
+    has $!resolved = [];
+    has $!rejected = [];
 
-    submethod BUILD { $promise = Promises::Promise->new($self) }
+    has $!status   is ro = IN_PROGRESS;
+    has $!promise  is ro;
+    has $!result   is ro;
+
+    submethod BUILD { $!promise = Promises::Promise->new($self) }
 
     # predicates for all the status possiblities
-    method is_in_progress { $status eq IN_PROGRESS }
-    method is_resolving   { $status eq RESOLVING   }
-    method is_rejecting   { $status eq REJECTING   }
-    method is_resolved    { $status eq RESOLVED    }
-    method is_rejected    { $status eq REJECTED    }
+    method is_in_progress { $!status eq IN_PROGRESS }
+    method is_resolving   { $!status eq RESOLVING   }
+    method is_rejecting   { $!status eq REJECTING   }
+    method is_resolved    { $!status eq RESOLVED    }
+    method is_rejected    { $!status eq REJECTED    }
 
     # the three possible states according to the spec ...
     method is_unfulfilled { $self->is_in_progress            }
@@ -39,25 +39,25 @@ class Deferred {
     method is_failed      { $self->is_rejected || $self->is_rejecting }
 
     method resolve {
-        $result = [ @_ ];
-        $status = RESOLVING;
-        $self->_notify( $resolved, $result );
-        $resolved = [];
-        $status   = RESOLVED;
+        $!result = [ @_ ];
+        $!status = RESOLVING;
+        $self->_notify( $!resolved, $!result );
+        $!resolved = [];
+        $!status   = RESOLVED;
         $self;
     }
 
     method reject {
-        $result = [ @_ ];
-        $status = REJECTING;
-        $self->_notify( $rejected, $result );
-        $rejected = [];
-        $status   = REJECTED;
+        $!result = [ @_ ];
+        $!status = REJECTING;
+        $self->_notify( $!rejected, $!result );
+        $!rejected = [];
+        $!status   = REJECTED;
         $self;
     }
 
     method then($callback, $error) {
-        
+
         (ref $callback && reftype $callback eq 'CODE')
             || confess "You must pass in a success callback";
 
@@ -72,8 +72,8 @@ class Deferred {
 
         my $d = (ref $self)->new;
 
-        push @$resolved => $self->_wrap( $d, $callback, 'resolve' );
-        push @$rejected => $self->_wrap( $d, $error,    'reject'  );
+        push @{$!resolved} => $self->_wrap( $d, $callback, 'resolve' );
+        push @{$!rejected} => $self->_wrap( $d, $error,    'reject'  );
 
         if ( $self->status eq RESOLVED ) {
             $self->resolve( @{ $self->result } );
