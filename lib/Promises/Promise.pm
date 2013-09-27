@@ -13,7 +13,7 @@ class Promise {
 
     has $deferred;# is required;
 
-    method new($x) { $class->next::method( deferred => $x ); }
+    method new($class: $x) { $class->next::method( deferred => $x ); }
 
     submethod BUILD { die "You must supply an instance of Promises::Deferred" unless defined $deferred; }
 
